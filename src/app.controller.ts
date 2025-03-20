@@ -10,6 +10,7 @@ export class AppController {
 
   @Get()
   async getTodo() {
+    console.log("API: https://jsonplaceholder.typicode.com/todos/2");
     try {
       const response = await axios.get('https://jsonplaceholder.typicode.com/todos/2');
       return response.data;
