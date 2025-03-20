@@ -13,7 +13,7 @@ const ENV = process.env.NODE_ENV || 'production'; // Default to 'qa' for local
       envFilePath: `.env.${ENV}`,
       isGlobal: true
     }),
-    MongooseModule.forRoot(process.env.MONGODB_URI || ''), // process.env = `.env.${ENV}` = .env.production
+    MongooseModule.forRoot(process.env.MONGODB_URI || ''), // process.env = envFilePath =`.env.${ENV}` = .env.production
     UsersModule
   ],
   controllers: [AppController],
