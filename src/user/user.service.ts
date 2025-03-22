@@ -27,11 +27,7 @@ export class UsersService {
             });
 
             await newUser.save();
-            console.log('User created:', newUser);
-
             await this.mailService.sendVerificationEmail(userDto.email, verificationToken);
-            console.log('Verification email sent to:', userDto.email);
-
             return 'User created. Verification email sent.';
         } catch (error) {
             console.error('Error during user creation:', error.message || error);

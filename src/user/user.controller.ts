@@ -11,7 +11,7 @@ export class UsersController {
         return this.usersService.createUser(userDto);
     }
 
-    @Get('create/verify')
+    @Get('verify')
     async verifyUser(@Query('token') token: string) {
         return this.usersService.verifyUser(token);
     }
