@@ -10,7 +10,13 @@ export class User extends Document {
     email: string;
 
     @Prop({ required: true })
-    password: string; // ✅ Added password field
+    password: string;
+
+    @Prop({ default: false })
+    verified: boolean;
+
+    @Prop({ type: String, default: null })
+    verificationToken?: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
