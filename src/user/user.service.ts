@@ -6,6 +6,7 @@ import { UserDto } from './user.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { MailService } from 'services/mail.service';
+import { Response } from 'express';
 
 @Injectable()
 export class UsersService {
@@ -14,7 +15,7 @@ export class UsersService {
         private mailService: MailService,
     ) { }
 
-    async createUser(userDto: UserDto): Promise<string> {
+    async createUser(userDto: UserDto, res: Response): Promise<Response> {
         try {
             const hashedPassword = await bcrypt.hash(userDto.password, 10);
             const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -28,25 +29,34 @@ export class UsersService {
 
             await newUser.save();
             await this.mailService.sendVerificationEmail(userDto.email, verificationToken);
-            return 'User created. Verification email sent.';
+
+            return res.status(200).json({ message: 'User created. Verification email sent.' });
         } catch (error) {
             console.error('Error during user creation:', error.message || error);
-            throw new Error('Failed to create user or send email.');
+            return res.status(500).json({ message: 'Failed to create user or send email.' });
         }
     }
 
-
-    async verifyUser(token: string): Promise<string> {
-        const user = await this.userModel.findOne({ verificationToken: token });
+    async verifyUser(token: string, email: string, password: string, res: Response): Promise<Response> {
+        const user = await this.userModel.findOne({ email });
 
         if (!user) {
-            throw new NotFoundException('Invalid or expired token');
+            return res.status(404).json({ message: 'User does not exist' });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ message: 'Invalid email or password' });
+        }
+
+        if (user.verificationToken !== token) {
+            return res.status(400).json({ message: 'Invalid or expired token' });
         }
 
         user.verified = true;
         user.verificationToken = null;
         await user.save();
 
-        return 'User verified successfully';
+        return res.status(200).json({ message: 'User verified successfully' });
     }
 }

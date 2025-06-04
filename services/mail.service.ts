@@ -20,7 +20,7 @@ export class MailService {
 
     async sendVerificationEmail(email: string, token: string) {
         try {
-            const verificationLink = `${process.env.BASE_URL_BACKEND}/users/verify?token=${token}`;
+            const verificationLink = `${process.env.BASE_URL_FRONTEND}/users/verify?token=${token}`;
 
             const mailOptions = {
                 from: process.env.EMAIL_USER,
