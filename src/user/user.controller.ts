@@ -20,4 +20,12 @@ export class UsersController {
     ): Promise<any> {
         await this.usersService.verifyUser(token, email, password, res);
     }
+
+    @Post('login')
+    async loginUser(
+        @Body() loginDto: { email: string; password: string },
+        @Res() res: Response
+    ): Promise<any> {
+        await this.usersService.loginUser(loginDto.email, loginDto.password, res);
+    }
 }

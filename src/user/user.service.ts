@@ -59,4 +59,35 @@ export class UsersService {
 
         return res.status(200).json({ message: 'User verified successfully' });
     }
+
+    async loginUser(email: string, password: string, res: Response): Promise<Response> {
+
+        try {
+            const user = await this.userModel.findOne({ email }).select('+password'); // ensure password is selected
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (!isPasswordValid) {
+                return res.status(400).json({ message: 'Invalid email or password' });
+            }
+
+            if (!user.verified) {
+                return res.status(403).json({ message: 'User not verified' });
+            }
+
+            // Exclude password from returned user data
+            const userDetails = user.toObject() as any;
+            delete userDetails.password;
+            delete userDetails.verificationToken;
+
+            return res.status(200).json({ status: 200, success: true, message: 'Login successful', user: userDetails });
+        } catch (error) {
+            console.error('Error during login:', error.message || error);
+            return res.status(500).json({ message: 'Login failed' });
+        }
+    }
+
 }
