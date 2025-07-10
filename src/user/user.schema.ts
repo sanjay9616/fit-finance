@@ -3,6 +3,10 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class User extends Document {
+
+    @Prop({ required: true })
+    id: number;
+
     @Prop({ required: true })
     name: string;
 
@@ -17,6 +21,12 @@ export class User extends Document {
 
     @Prop({ type: String, default: null })
     verificationToken?: string | null;
+
+    @Prop({ type: String, default: null })
+    token?: string | null;
+
+    @Prop({ type: Number, default: null })
+    tokenExpiresAt?: number | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
