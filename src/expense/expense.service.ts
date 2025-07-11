@@ -4,6 +4,7 @@ import { CreateExpenseDto } from 'config/interfaces';
 import { Model } from 'mongoose';
 import { Expense, ExpenseDocument } from './expense.schema';
 import { Response } from 'express';
+import { MESSAGE } from 'config/message';
 
 @Injectable()
 export class ExpenseService {
@@ -20,18 +21,14 @@ export class ExpenseService {
         updatedAt: now,
       });
       const data = await newExpense.save();
-      return res.status(200).json({ status: 200, success: true, message: 'Expense added successfully', data });
+      return res.status(200).json({ status: 200, success: true, message: MESSAGE.SUCCESS.EXPENSE_ADDED, data });
     } catch (error) {
-      return res.status(500).json({ status: 500, success: false, message: 'Failed to add expense', error: error.message || 'Internal Server Error' });
+      console.error('Error creating expense:', error);
+      return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` })
     }
   }
 
-  async getAllExpensesByUserId(
-    res: Response,
-    id: number,
-    from?: Date,
-    to?: Date,
-  ): Promise<Response> {
+  async getAllExpensesByUserId(res: Response, id: number, from?: Date, to?: Date): Promise<Response> {
     try {
       const query: any = { id };
 
@@ -45,19 +42,10 @@ export class ExpenseService {
 
       const expenses = await this.expenseModel.find(query).sort({ createdAt: -1 });
 
-      return res.status(200).json({
-        status: 200,
-        success: true,
-        message: 'Fetched all expenses successfully',
-        data: expenses,
-      });
+      return res.status(200).json({ status: 200, success: true, message: MESSAGE.SUCCESS.EXPENSE_FETCHED, data: expenses, });
     } catch (error) {
-      return res.status(500).json({
-        status: 500,
-        success: false,
-        message: 'Failed to fetch expenses',
-        error: error.message || 'Unknown error',
-      });
+      console.error('Error fetching expense:', error);
+      return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` })
     }
   }
 
@@ -66,11 +54,12 @@ export class ExpenseService {
     try {
       const updated = await this.expenseModel.findByIdAndUpdate(id, { ...updateDto, updatedAt: Date.now() }, { new: true });
       if (!updated) {
-        return res.status(404).json({ success: false, message: 'Expense not found' });
+        return res.status(404).json({ success: false, message: MESSAGE.ERROR.EXPANSE_NOT_FOUND });
       }
-      return res.status(200).json({ status: 200, success: true, message: 'Expense updated successfully', data: updated });
+      return res.status(200).json({ status: 200, success: true, message: MESSAGE.SUCCESS.EXPENSE_UPDATED, data: updated });
     } catch (error) {
-      return res.status(500).json({ success: false, message: 'Failed to update expense' });
+      console.error('Error updating expense:', error);
+      return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` })
     }
   }
 
@@ -78,12 +67,12 @@ export class ExpenseService {
     try {
       const result = await this.expenseModel.findByIdAndDelete(id);
       if (!result) {
-        return res.status(404).json({ status: 404, success: false, message: 'Expense not found' });
+        return res.status(404).json({ status: 404, success: false, message: MESSAGE.ERROR.EXPANSE_NOT_FOUND });
       }
-      return res.status(200).json({ status: 200, success: true, message: 'Expense deleted successfully', });
+      return res.status(200).json({ status: 200, success: true, message: MESSAGE.SUCCESS.EXPENSE_DELETED, });
     } catch (error) {
       console.error('Error deleting expense:', error);
-      return res.status(500).json({ status: 500, success: false, message: 'Failed to delete expense' });
+      return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` })
     }
   }
 }

@@ -7,6 +7,7 @@ import * as crypto from 'crypto';
 import { MailService } from 'services/mail.service';
 import { Response } from 'express';
 import { UserDto } from 'config/interfaces';
+import { MESSAGE } from 'config/message';
 
 @Injectable()
 export class UsersService {
@@ -33,35 +34,41 @@ export class UsersService {
             await newUser.save();
             await this.mailService.sendVerificationEmail(userDto.email, verificationToken);
 
-            return res.status(200).json({ message: 'User created. Verification email sent.' });
+            return res.status(200).json({ message: MESSAGE.SUCCESS.USER_CREATED });
         } catch (error) {
             console.error('Error during user creation:', error.message || error);
-            return res.status(500).json({ message: 'Failed to create user or send email.' });
+            return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` });
         }
     }
 
     async verifyUser(token: string, email: string, password: string, res: Response): Promise<Response> {
-        const user = await this.userModel.findOne({ email });
+        try {
+            const user = await this.userModel.findOne({ email });
 
-        if (!user) {
-            return res.status(404).json({ message: 'User does not exist' });
+            if (!user) {
+                return res.status(404).json({ message: MESSAGE.ERROR.USER_NOT_FOUND });
+            }
+
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (!isPasswordValid) {
+                return res.status(400).json({ message: MESSAGE.ERROR.INVALID_ACCOUNT_PASSWORD });
+            }
+
+            if (user.verificationToken !== token) {
+                return res.status(400).json({ message: MESSAGE.ERROR.INVALID_TOKEN_LINK });
+            }
+
+            user.verified = true;
+            user.verificationToken = null;
+            await user.save();
+
+            return res.status(200).json({ message: MESSAGE.SUCCESS.ACCOUNT_VERIFIED });
+        } catch (error) {
+            console.error('Verification error:', error);
+            return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` });
         }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(400).json({ message: 'Invalid email or password' });
-        }
-
-        if (user.verificationToken !== token) {
-            return res.status(400).json({ message: 'Invalid or expired token' });
-        }
-
-        user.verified = true;
-        user.verificationToken = null;
-        await user.save();
-
-        return res.status(200).json({ message: 'User verified successfully' });
     }
+
 
     async loginUser(email: string, password: string, res: Response): Promise<Response> {
 
@@ -69,16 +76,16 @@ export class UsersService {
             const user = await this.userModel.findOne({ email }).select('+password'); // ensure password is selected
 
             if (!user) {
-                return res.status(404).json({ message: 'User not found' });
+                return res.status(404).json({ message: MESSAGE.ERROR.USER_NOT_FOUND });
             }
 
             const isPasswordValid = await bcrypt.compare(password, user.password);
             if (!isPasswordValid) {
-                return res.status(400).json({ message: 'Invalid email or password' });
+                return res.status(400).json({ message: MESSAGE.ERROR.INVALID_ACCOUNT_PASSWORD });
             }
 
             if (!user.verified) {
-                return res.status(403).json({ message: 'User not verified' });
+                return res.status(403).json({ message: MESSAGE.ERROR.ACCOUNT_NOT_VERIFIED });
             }
 
             // 🔐 Generate a secure login token
@@ -95,10 +102,10 @@ export class UsersService {
             delete userDetails.password;
             delete userDetails.verificationToken;
 
-            return res.status(200).json({ status: 200, success: true, message: 'Login successful', user: userDetails });
+            return res.status(200).json({ status: 200, success: true, message: MESSAGE.SUCCESS.ACCOUNT_LOGGED_IN, user: userDetails });
         } catch (error) {
             console.error('Error during login:', error.message || error);
-            return res.status(500).json({ message: 'Login failed' });
+            return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` });
         }
     }
 
@@ -106,20 +113,20 @@ export class UsersService {
     async validateToken(token: string, res: Response): Promise<Response> {
         try {
             if (!token) {
-                return res.status(400).json({ message: 'Token is required' });
+                return res.status(400).json({ message: MESSAGE.ERROR.SESSION_TOKEN_MISSING });
             }
 
             const user = await this.userModel.findOne({ token });
 
             if (!user) {
-                return res.status(401).json({ message: 'Invalid token' });
+                return res.status(401).json({ message: MESSAGE.ERROR.SESSION_TOKEN_INVALID });
             }
 
             const now = Date.now();
             const tokenExpiry = user.tokenExpiresAt;
 
             if (!tokenExpiry || now > tokenExpiry) {
-                return res.status(401).json({ message: 'Token expired' });
+                return res.status(401).json({ message: MESSAGE.ERROR.SESSION_TOKEN_EXPIRED });
             }
 
             const userDetails = user.toObject() as any;
@@ -127,10 +134,10 @@ export class UsersService {
             delete userDetails.verificationToken;
             delete userDetails.token;
 
-            return res.status(200).json({ status: 200, success: true, message: "Validated successful", user: userDetails });
+            return res.status(200).json({ status: 200, success: true, message: MESSAGE.SUCCESS.SESSION_TOKEN_VALIDATED, user: userDetails });
         } catch (error) {
             console.error('Token validation error:', error.message || error);
-            return res.status(500).json({ message: 'Token validation failed' });
+            return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` });
         }
     }
 
