@@ -39,4 +39,9 @@ export class ExpenseController {
   async deleteExpense(@Param('id') id: string, @Res() res: Response): Promise<void> {
     await this.expenseService.deleteExpense(id, res);
   }
+
+  @Get('categories/:id')
+  async getCategories(@Param('id') id: string, @Query('search') search: string, @Res() res: Response): Promise<void> {
+    await this.expenseService.getFilteredCategories(id, search, res);
+  }
 }

@@ -75,4 +75,41 @@ export class ExpenseService {
       return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` })
     }
   }
+
+  async getFilteredCategories(userId: string, search: string, res: Response): Promise<Response> {
+    try {
+      const searchRegex = search?.trim() ? new RegExp(search.trim(), 'i') : null;
+      const userCategoriesAgg = [
+        { $match: { userId: Number(userId) } },
+        { $group: { _id: '$category' } },
+        { $project: { _id: 0, category: '$_id' } }
+      ];
+      const userCategories = await this.expenseModel.aggregate(userCategoriesAgg).exec();
+      const userCategorySet = new Set(userCategories.map(item => item.category));
+      const othersCategoriesAgg = [
+        { $match: { userId: { $ne: Number(userId) } } },
+        { $group: { _id: '$category' } },
+        { $project: { _id: 0, category: '$_id' } }
+      ];
+      const othersCategories = await this.expenseModel.aggregate(othersCategoriesAgg).exec();
+      const othersFiltered = othersCategories
+        .map(item => item.category)
+        .filter(cat => !userCategorySet.has(cat));
+      let finalList = [...userCategorySet, ...othersFiltered];
+      if (searchRegex) {
+        finalList = finalList.filter(category => searchRegex.test(category));
+      }
+
+      return res.status(200).json({status: 200,success: true,message: MESSAGE.SUCCESS.CATEGORY_FETCHED,data: finalList});
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      return res.status(500).json({
+        status: 500,
+        success: false,
+        message: MESSAGE.ERROR.SOMETHING_WENT_WRONG,
+      });
+    }
+  }
+
+
 }
