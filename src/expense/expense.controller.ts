@@ -15,19 +15,18 @@ export class ExpenseController {
     await this.expenseService.createExpense(createExpenseDto, res);
   }
 
-  @Get(':id')
+  @Get(':userId')
   async getAllExpenses(
     @Res() res: Response,
-    @Param('id') id: number,
-    @Query('from') from?: string,
-    @Query('to') to?: string
+    @Param('userId') id: number,
+    @Query('from') from?: number,
+    @Query('to') to?: number
   ): Promise<void> {
     const fromDate = from ? new Date(Number(from)) : undefined;
     const toDate = to ? new Date(Number(to)) : undefined;
 
     await this.expenseService.getAllExpensesByUserId(res, id, fromDate, toDate);
   }
-
 
 
   @Patch(':id')
@@ -41,7 +40,13 @@ export class ExpenseController {
   }
 
   @Get('categories/:id')
-  async getCategories(@Param('id') id: string, @Query('search') search: string, @Res() res: Response): Promise<void> {
-    await this.expenseService.getFilteredCategories(id, search, res);
+  async getCategories(@Param('id') id: string, @Query('search') search: string, @Query('createdAt') createdAt: number, @Res() res: Response): Promise<void> {
+    await this.expenseService.getFilteredCategories(id, search, createdAt, res);
   }
+
+  @Get('/expense-goals/:userId')
+  async getExpenseGoalsBy(@Param('userId') userId: string, @Query('category') category: string, @Query('createdAt') createdAt: number, @Res() res: Response): Promise<void> {
+    await this.expenseService.getExpenseGoalsByCategory(userId, category, createdAt, res);
+  }
+
 }

@@ -1,11 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export type ExpenseDocument = Expense & Document;
+export type ExpenseGoalDocument = ExpenseGoal & Document;
 
 @Schema()
-export class Expense {
-
+export class ExpenseGoal {
     @Prop({ required: true })
     userId: number;
 
@@ -13,13 +12,13 @@ export class Expense {
     category: string;
 
     @Prop({ required: true })
-    name: string;
-
-    @Prop({ required: true })
     expenseType: string;
 
     @Prop({ required: true })
-    amount: number;
+    targetAmount: number;
+
+    @Prop({ required: true, default: 0 })
+    currentAmount: number;
 
     @Prop()
     description: string;
@@ -31,4 +30,5 @@ export class Expense {
     updatedAt: number;
 }
 
-export const ExpenseSchema = SchemaFactory.createForClass(Expense);
+
+export const ExpenseGoalSchema = SchemaFactory.createForClass(ExpenseGoal);
