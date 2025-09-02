@@ -5,6 +5,7 @@ import { Response } from 'express';
 
 @Controller('expense')
 export class ExpenseController {
+
   constructor(private readonly expenseService: ExpenseService) { }
 
   @Post()
@@ -15,17 +16,23 @@ export class ExpenseController {
     await this.expenseService.createExpense(createExpenseDto, res);
   }
 
-  @Get(':userId')
+  @Post(':userId')
   async getAllExpenses(
     @Res() res: Response,
     @Param('userId') id: number,
-    @Query('from') from?: number,
-    @Query('to') to?: number
+    @Body('from') from?: number,
+    @Body('to') to?: number,
+    @Body('category') category?: string
   ): Promise<void> {
     const fromDate = from ? new Date(Number(from)) : undefined;
     const toDate = to ? new Date(Number(to)) : undefined;
 
-    await this.expenseService.getAllExpensesByUserId(res, id, fromDate, toDate);
+    await this.expenseService.getAllExpensesByUserId(res, {
+      userId: id,
+      from: fromDate,
+      to: toDate,
+      category,
+    });
   }
 
 
@@ -47,6 +54,11 @@ export class ExpenseController {
   @Get('/expense-goals/:userId')
   async getExpenseGoalsBy(@Param('userId') userId: string, @Query('category') category: string, @Query('createdAt') createdAt: number, @Res() res: Response): Promise<void> {
     await this.expenseService.getExpenseGoalsByCategory(userId, category, createdAt, res);
+  }
+
+  @Get('categories/all/:userId')
+  async getAllUniqueCategories(@Param('userId') userId: string, @Res() res: Response): Promise<void> {
+    await this.expenseService.getAllUniqueCategories(userId, res);
   }
 
 }

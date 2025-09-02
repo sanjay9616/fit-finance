@@ -45,8 +45,12 @@ export class ExpenseService {
     }
   }
 
-  async getAllExpensesByUserId(res: Response, userId: number, from?: Date, to?: Date): Promise<Response> {
+  async getAllExpensesByUserId(
+    res: Response,
+    payload: { userId: number; from?: Date; to?: Date; category?: string }
+  ): Promise<Response> {
     try {
+      const { userId, from, to, category } = payload;
       const query: any = { userId };
 
       if (from && to) {
@@ -57,12 +61,16 @@ export class ExpenseService {
         query.createdAt = { $lte: to };
       }
 
+      if (category) {
+        query.category = category;
+      }
+
       const expenses = await this.expenseModel.find(query).sort({ createdAt: -1 });
 
       return res.status(200).json({ status: 200, success: true, message: MESSAGE.SUCCESS.EXPENSE_FETCHED, data: expenses, });
     } catch (error) {
       console.error('Error fetching expense:', error);
-      return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` })
+      return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` });
     }
   }
 
@@ -223,11 +231,20 @@ export class ExpenseService {
     }
   }
 
+  async getAllUniqueCategories(userId: string, res: Response): Promise<Response> {
+    try {
+      const userIdNum = Number(userId);
+      if (!userIdNum) {
+        return res.status(400).json({ status: 400, success: false, message: "Invalid User ID" });
+      }
 
+      const categories = await this.expenseModel.distinct("category", { userId: userIdNum });
 
-
-
-
-
+      return res.status(200).json({ status: 200, success: true, message: MESSAGE.SUCCESS.CATEGORY_FETCHED, data: categories });
+    } catch (error) {
+      console.error("Error fetching unique categories:", error);
+      return res.status(500).json({ status: 500, success: false, message: MESSAGE.ERROR.SOMETHING_WENT_WRONG });
+    }
+  }
 
 }
