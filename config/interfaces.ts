@@ -14,11 +14,14 @@ export class CreateExpenseDto {
 }
 
 export class CreateExpenseGoalDto {
+    _id?: string
     userId: number;
     category: string;
     expenseType: 'Expense' | 'Income' | 'Saving';
     targetAmount: number;
     currentAmount: number;
+    createdAt: number;
+    updatedAt: number;
     description?: string;
 }
 

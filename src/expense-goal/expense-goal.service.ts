@@ -63,25 +63,42 @@ export class ExpenseGoalService {
 
     async updateExpenseGoal(id: string, updateDto: Partial<CreateExpenseGoalDto>, res: Response): Promise<Response> {
         try {
+            if (updateDto.category && updateDto.userId && updateDto.createdAt) {
+                const { userId, category, createdAt, _id } = updateDto;
 
-            if (updateDto.category) {
-                const { userId, category } = updateDto;
-                const existingGoal = await this.expenseGoalModel.findOne({ userId, category: category.trim() });
+                const expenseDate = new Date(Number(updateDto.createdAt));
+                const startOfMonth = (new Date(expenseDate.getFullYear(), expenseDate.getMonth(), 1)).getTime();
+                const endOfMonth = (new Date(expenseDate.getFullYear(), expenseDate.getMonth() + 1, 0, 23, 59, 59, 999)).getTime();
+
+                const existingGoal = await this.expenseGoalModel.findOne({
+                    userId,
+                    category: category.trim(),
+                    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+                    _id: { $ne: _id }
+                });
+
                 if (existingGoal) {
-                    return res.status(200).json({ status: 400, success: false, message: `Category "${category}" already exists for this user.` });
+                    return res.status(200).json({ status: 400, success: false, message: `Category "${category}" already exists for this user in this month.` });
                 }
             }
 
-            const updated = await this.expenseGoalModel.findByIdAndUpdate(id, { ...updateDto, updatedAt: Date.now() }, { new: true });
+            const updated = await this.expenseGoalModel.findByIdAndUpdate(
+                id,
+                { ...updateDto, updatedAt: Date.now() },
+                { new: true }
+            );
+
             if (!updated) {
                 return res.status(404).json({ success: false, message: MESSAGE.ERROR.EXPANSE_NOT_FOUND });
             }
+
             return res.status(200).json({ status: 200, success: true, message: MESSAGE.SUCCESS.EXPENSE_UPDATED, data: updated });
         } catch (error) {
             console.error('Error updating expense goal:', error);
-            return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` })
+            return res.status(500).json({ message: `Error: ${MESSAGE.ERROR.SOMETHING_WENT_WRONG}` });
         }
     }
+
 
     async deleteExpenseGoal(id: string, res: Response): Promise<Response> {
         try {
