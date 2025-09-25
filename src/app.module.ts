@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './user/users.module';
 import { ExpenseModule } from './expense/expense.module';
 import { ExpenseGoalModule } from './expense-goal/expense-goal.module';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { ExpenseGoalModule } from './expense-goal/expense-goal.module';
     MongooseModule.forRoot(process.env.MONGODB_URI || ''),
     UsersModule,
     ExpenseModule,
-    ExpenseGoalModule
+    ExpenseGoalModule,
+    CategoryModule
   ],
   controllers: [AppController],
   providers: [AppService],

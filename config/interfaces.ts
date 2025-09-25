@@ -6,7 +6,7 @@ export class UserDto {
 
 export class CreateExpenseDto {
     name: string;
-    category: string;
+    categoryId: number;
     expenseType: 'Expense' | 'Income' | 'Saving';
     amount: number;
     description?: string;
@@ -16,7 +16,8 @@ export class CreateExpenseDto {
 export class CreateExpenseGoalDto {
     _id?: string
     userId: number;
-    category: string;
+    categoryId?: number;
+    categoryName: string;
     expenseType: 'Expense' | 'Income' | 'Saving';
     targetAmount: number;
     currentAmount: number;
@@ -25,3 +26,8 @@ export class CreateExpenseGoalDto {
     description?: string;
 }
 
+export class CategoryDto {
+    userId: number;
+    categoryId: number;
+    categoryName: string;
+}

@@ -9,7 +9,7 @@ export class ExpenseGoal {
     userId: number;
 
     @Prop({ required: true })
-    category: string;
+    categoryId: number;
 
     @Prop({ required: true })
     expenseType: string;

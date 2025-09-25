@@ -9,6 +9,7 @@ export const MESSAGE = {
         EXPENSE_UPDATED: 'Expense updated successfully',
         EXPENSE_DELETED: 'Expense deleted successfully',
         CATEGORY_FETCHED: "Category list fetched successfully.",
+        CATEGORY_CREATED: "Category created successfully.",
     },
     ERROR: {
         SOMETHING_WENT_WRONG: 'Something Went Wrong',

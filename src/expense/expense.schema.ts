@@ -10,7 +10,7 @@ export class Expense {
     userId: number;
 
     @Prop({ required: true })
-    category: string;
+    categoryId: number;
 
     @Prop({ required: true })
     name: string;
