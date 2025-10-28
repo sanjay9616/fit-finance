@@ -7,31 +7,30 @@ import { Response } from 'express';
 export class ExpenseController {
   constructor(private readonly expenseService: ExpenseService) { }
 
+  @Post(':userId')
+  async getUserExpenses(@Res() res: Response, @Param('userId') userId: string | number, @Body('from') from?: number | string, @Body('to') to?: number | string, @Body('categoryId') categoryId?: number | string): Promise<void> {
+    await this.expenseService.getUserExpenses(res, { userId: Number(userId), from: from ? Number(from) : undefined, to: to ? Number(to) : undefined, categoryId: categoryId ? Number(categoryId) : undefined });
+  }
+
   @Post()
-  async createExpense(
-    @Body() createExpenseDto: CreateExpenseDto,
-    @Res() res: Response
-  ): Promise<void> {
-    await this.expenseService.createExpense(createExpenseDto, res);
+  async createExpense(@Body() createExpenseDto: CreateExpenseDto, @Res() res: Response): Promise<void> {
+    const now = Date.now();
+    const payload = {
+      ...createExpenseDto,
+      createdAt: createExpenseDto.createdAt ? Number(createExpenseDto.createdAt) : now,
+      updatedAt: createExpenseDto.updatedAt ? Number(createExpenseDto.updatedAt) : now,
+    };
+    await this.expenseService.createExpense(payload, res);
   }
-
-  @Get(':userId')
-  async getAllExpenses(
-    @Res() res: Response,
-    @Param('userId') id: number,
-    @Query('from') from?: number,
-    @Query('to') to?: number
-  ): Promise<void> {
-    const fromDate = from ? new Date(Number(from)) : undefined;
-    const toDate = to ? new Date(Number(to)) : undefined;
-
-    await this.expenseService.getAllExpensesByUserId(res, id, fromDate, toDate);
-  }
-
 
   @Patch(':id')
   async updateExpense(@Param('id') id: string, @Body() updateExpenseDto: Partial<CreateExpenseDto>, @Res() res: Response): Promise<void> {
-    await this.expenseService.updateExpense(id, updateExpenseDto, res);
+    const payload = {
+      ...updateExpenseDto,
+      createdAt: updateExpenseDto.createdAt ? Number(updateExpenseDto.createdAt) : undefined,
+      updatedAt: Date.now(),
+    };
+    await this.expenseService.updateExpense(id, payload, res);
   }
 
   @Delete(':id')
@@ -39,14 +38,18 @@ export class ExpenseController {
     await this.expenseService.deleteExpense(id, res);
   }
 
-  @Get('categories/:id')
-  async getCategories(@Param('id') id: string, @Query('search') search: string, @Query('createdAt') createdAt: number, @Res() res: Response): Promise<void> {
-    await this.expenseService.getFilteredCategories(id, search, createdAt, res);
+  @Get('current-month-expense-goals-by-category/:userId')
+  async getCurrentMonthExpenseGoalsByCategory(@Param('userId') userId: string | number, @Query('categoryId') categoryId: string | number, @Query('createdAt') createdAt: string | number, @Res() res: Response): Promise<void> {
+    await this.expenseService.getCurrentMonthExpenseGoalsByCategory(Number(userId), Number(categoryId), Number(createdAt), res);
   }
 
-  @Get('/expense-goals/:userId')
-  async getExpenseGoalsBy(@Param('userId') userId: string, @Query('category') category: string, @Query('createdAt') createdAt: number, @Res() res: Response): Promise<void> {
-    await this.expenseService.getExpenseGoalsByCategory(userId, category, createdAt, res);
+  @Get('current-month-category-list/:id')
+  async getCurrentMonthCategoryList(@Param('id') id: string | number, @Query('search') search: string, @Query('createdAt') createdAt: string | number, @Res() res: Response): Promise<void> {
+    await this.expenseService.getCurrentMonthCategoryList(Number(id), search, Number(createdAt), res);
   }
 
+  @Get('all-unique-category-list/:userId')
+  async getAllUniqueCategoryList(@Param('userId') userId: string | number, @Res() res: Response): Promise<void> {
+    await this.expenseService.getAllUniqueCategoryList(Number(userId), res);
+  }
 }

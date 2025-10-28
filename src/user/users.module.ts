@@ -11,6 +11,6 @@ import { MailService } from 'services/mail.service';
     ],
     controllers: [UsersController],
     providers: [UsersService, MailService],
-    exports: [UsersService, MailService], // Ensure other modules can use UsersService
+    exports: [UsersService, MailService],
 })
 export class UsersModule { }

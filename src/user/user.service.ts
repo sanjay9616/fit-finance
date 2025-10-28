@@ -141,5 +141,28 @@ export class UsersService {
         }
     }
 
+    async searchUsersByName(name: string, res: Response): Promise<Response> {
+        try {
+            if (!name || !name.trim()) {
+                return res.status(400).json({ message: 'Name query is required' });
+            }
+
+            const regex = new RegExp(name, 'i');
+            const users = await this.userModel
+                .find({ name: regex, verified: true })
+                .select('id name -_id')
+                .lean();
+
+            const mappedUsers = users.map(u => ({
+                userId: u.id,
+                name: u.name
+            }));
+
+            return res.status(200).json({ status: 200, success: true, data: mappedUsers });
+        } catch (error) {
+            console.error('User search error:', error);
+            return res.status(500).json({ message: 'Something went wrong while searching users' });
+        }
+    }
 
 }

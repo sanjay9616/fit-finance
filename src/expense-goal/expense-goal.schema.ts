@@ -9,16 +9,13 @@ export class ExpenseGoal {
     userId: number;
 
     @Prop({ required: true })
-    category: string;
+    categoryId: number;
 
     @Prop({ required: true })
     expenseType: string;
 
     @Prop({ required: true })
     targetAmount: number;
-
-    @Prop({ required: true, default: 0 })
-    currentAmount: number;
 
     @Prop()
     description: string;
@@ -29,6 +26,5 @@ export class ExpenseGoal {
     @Prop({ default: Date.now })
     updatedAt: number;
 }
-
 
 export const ExpenseGoalSchema = SchemaFactory.createForClass(ExpenseGoal);

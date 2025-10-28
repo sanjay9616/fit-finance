@@ -13,24 +13,22 @@ export class UsersController {
     }
 
     @Post('verify')
-    async verifyUser(
-        @Query('token') token: string,
-        @Body() { email, password }: { email: string; password: string },
-        @Res() res: Response
-    ): Promise<any> {
+    async verifyUser(@Query('token') token: string, @Body() { email, password }: { email: string; password: string }, @Res() res: Response): Promise<any> {
         await this.usersService.verifyUser(token, email, password, res);
     }
 
     @Post('login')
-    async loginUser(
-        @Body() loginDto: { email: string; password: string },
-        @Res() res: Response
-    ): Promise<any> {
+    async loginUser(@Body() loginDto: { email: string; password: string }, @Res() res: Response): Promise<any> {
         await this.usersService.loginUser(loginDto.email, loginDto.password, res);
     }
 
     @Get('validate-token')
     async validateToken(@Query('token') token: string, @Res() res: Response): Promise<any> {
         await this.usersService.validateToken(token, res);
+    }
+
+    @Get('search')
+    async searchUsers(@Query('name') name: string, @Res() res: Response): Promise<any> {
+        return this.usersService.searchUsersByName(name, res);
     }
 }
