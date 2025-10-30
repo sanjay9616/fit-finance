@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 
 @Controller('/')
@@ -9,13 +9,12 @@ export class AppController {
   }
 
   @Get()
-  async getTodo() {
-    console.log("API: https://jsonplaceholder.typicode.com/todos/2");
+  async rootHealth() {
     try {
-      const response = await axios.get('https://jsonplaceholder.typicode.com/todos/2');
-      return response.data;
+      return { status: 'ok', message: 'Service is running' };
     } catch (error) {
-      return { error: "Failed to fetch data" };
+      console.error('Root health endpoint error:', error.message);
+      throw new HttpException({ status: 'error', message: 'Service unavailable' }, HttpStatus.SERVICE_UNAVAILABLE);
     }
   }
 }
