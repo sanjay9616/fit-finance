@@ -28,6 +28,7 @@ export class SplitExpenseService {
             splitGroupId = Number(splitGroupId);
             const expenses = await this.splitExpenseModel.aggregate([
                 { $match: { splitGroupId } },
+                { $sort: { createdAt: -1 } },
                 {
                     $lookup: {
                         from: 'users',
