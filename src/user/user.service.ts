@@ -90,7 +90,7 @@ export class UsersService {
 
             // 🔐 Generate a secure login token
             const loginToken = crypto.randomBytes(32).toString('hex');
-            const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+            const tokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 24 hours
 
             // Save token in the user document
             user.token = loginToken;
