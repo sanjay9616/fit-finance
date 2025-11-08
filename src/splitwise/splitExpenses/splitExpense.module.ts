@@ -8,6 +8,7 @@ import { ExpenseGoal, ExpenseGoalSchema } from 'src/expense-goal/expense-goal.sc
 import { Expense, ExpenseSchema } from 'src/expense/expense.schema';
 import { SplitGroup, SplitGroupSchema } from '../splitGroups/splitGroups.schema';
 import { User, UserSchema } from 'src/user/user.schema';
+import { SplitActivity, SplitActivitySchema } from '../split-activity.schema';
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { User, UserSchema } from 'src/user/user.schema';
         MongooseModule.forFeature([{ name: ExpenseGoal.name, schema: ExpenseGoalSchema }]),
         MongooseModule.forFeature([{ name: Expense.name, schema: ExpenseSchema }]),
         MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+        MongooseModule.forFeature([{ name: SplitActivity.name, schema: SplitActivitySchema }]),
     ],
     controllers: [SplitExpenseController],
     providers: [SplitExpenseService],

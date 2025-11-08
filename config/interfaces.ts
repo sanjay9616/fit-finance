@@ -48,6 +48,7 @@ export interface SplitExpenseDto {
     splitGroupId: number;
     createdAt?: number;
     updatedAt?: number;
+    updatedBy?: number;
     __v?: number;
 }
 
@@ -59,6 +60,7 @@ export interface SettleDataDto {
     amount: number;
     createdAt?: number;
     updatedAt?: number;
+    updatedBy?: number;
 }
 
 

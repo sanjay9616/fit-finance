@@ -20,7 +20,7 @@ export class UsersService {
         try {
             const hashedPassword = await bcrypt.hash(userDto.password, 10);
             const verificationToken = crypto.randomBytes(32).toString('hex');
-            const lastUser = await this.userModel.findOne().sort({ userId: -1 }).limit(1);
+            const lastUser = await this.userModel.findOne().sort({ id: -1 }).limit(1);
             const id = lastUser?.id ? lastUser.id + 1 : 1000;
 
             const newUser = new this.userModel({

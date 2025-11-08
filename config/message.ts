@@ -18,6 +18,7 @@ export const MESSAGE = {
         SPLIT_EXPENSE_CREATED: 'Split Expense created successfully',
         SETTLE_UP_CREATED: 'Settle Up created successfully',
         SETTLE_UP_UPDATED: 'Settle Up updated successfully',
+        SETTLE_ACTIVITY_FETCHED: 'Activity fetched successfully',
     },
     ERROR: {
         SOMETHING_WENT_WRONG: 'Something Went Wrong',

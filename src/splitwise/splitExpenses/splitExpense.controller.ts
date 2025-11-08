@@ -37,4 +37,9 @@ export class SplitExpenseController {
         const id = Number(splitExpenseId);
         return this.splitExpenseService.deleteExpense(id, res);
     }
+
+    @Get('activity/:splitGroupId')
+    async getSplitActivity(@Param('splitGroupId') splitGroupId: number, @Res() res: Response) {
+        return this.splitExpenseService.getSplitActivity(splitGroupId, res);
+    }
 }
