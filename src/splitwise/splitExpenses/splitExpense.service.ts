@@ -82,7 +82,7 @@ export class SplitExpenseService {
 
     async createSplitExpense(expenseDto: SplitExpenseDto, res: Response): Promise<Response> {
         try {
-            const { paidBy, amount, title, splitGroupId } = expenseDto;
+            const { paidBy, amount, title, splitGroupId, splitBetween } = expenseDto;
             const now = Date.now();
             const splitGroup = await this.splitGroupsModel.findOne({ splitGroupId }).exec();
             if (!splitGroup) {
@@ -94,31 +94,46 @@ export class SplitExpenseService {
             const newId = lastExpense ? lastExpense.splitExpenseId + 1 : Date.now();
             const newExpense = new this.splitExpenseModel({
                 ...expenseDto,
-                title,
                 splitExpenseId: newId,
                 createdAt: now,
-                updatedAt: now,
+                updatedAt: now
             });
             await newExpense.save();
-            const user = await this.userModel.findOne({ id: paidBy }).exec();
-            const userName = user ? user.name : `User ${paidBy}`;
+
+            const payer = await this.userModel.findOne({ id: paidBy }).exec();
+            const payerName = payer?.name || `User ${paidBy}`;
+            const share = amount / splitBetween.length;
+            const description: string[] = [];
+
+            for (const uid of splitBetween) {
+                if (uid !== paidBy) {
+                    const user = await this.userModel.findOne({ id: uid }).exec();
+                    const userName = user?.name || "User";
+                    description.push(`${payerName} gets ₹${share.toFixed(2)} from ${userName}`);
+                }
+            }
+
+            description.unshift(`${payerName} added "${title}" of ₹${amount.toFixed(2)}`);
             const lastAudit = await this.splitActivityModel.findOne().sort({ auditId: -1 }).exec();
             const newAuditId = lastAudit ? lastAudit.auditId + 1 : Date.now();
+
             await this.splitActivityModel.create({
                 auditId: newAuditId,
                 splitGroupId,
                 splitGroupName: groupName,
                 userId: paidBy,
-                userName,
+                userName: payerName,
                 action: "CREATE_EXPENSE",
                 title,
-                description: [`${userName} added expense "${title}" in ${groupName}`],
-                timestamp: now,
+                description,
+                timestamp: now
             });
+
             const splitCategory = await this.categoryModel.findOne({
                 categoryName: SPLITWISE_DEFAULTS.CATEGORIES.SPLIT_EXPENSE.categoryName,
-                userId: paidBy,
+                userId: paidBy
             }).exec();
+
             if (splitCategory) {
                 await this.expensesModel.create({
                     userId: paidBy,
@@ -128,9 +143,10 @@ export class SplitExpenseService {
                     amount,
                     description: SPLITWISE_DEFAULTS.CATEGORIES.SPLIT_EXPENSE.expenseDescription(title, groupName),
                     createdAt: now,
-                    updatedAt: now,
+                    updatedAt: now
                 });
             }
+
             return res.status(200).json({ status: 200, success: true, message: MESSAGE.SUCCESS.SPLIT_EXPENSE_CREATED, data: newExpense });
 
         } catch (error) {
