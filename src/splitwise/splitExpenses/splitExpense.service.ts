@@ -25,6 +25,56 @@ export class SplitExpenseService {
         @InjectModel(SplitActivity.name) private splitActivityModel: Model<SplitActivityDocument>
     ) { }
 
+    private async ensureAllThreeGoals(userId: number, now: number) {
+        const categories = [
+            SPLITWISE_DEFAULTS.CATEGORIES.SPLIT_EXPENSE,
+            SPLITWISE_DEFAULTS.CATEGORIES.SETTLEMENT_PAID,
+            SPLITWISE_DEFAULTS.CATEGORIES.SETTLEMENT_RECEIVED
+        ];
+
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const endOfMonth = new Date(startOfMonth);
+        endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+
+        for (const cat of categories) {
+            const category = await this.categoryModel.findOne({
+                userId,
+                categoryName: cat.categoryName
+            });
+
+            if (!category) {
+                console.error(`Category missing for user ${userId}: ${cat.categoryName}`);
+                continue;
+            }
+
+            const existing = await this.expenseGoalModel.findOne({
+                userId,
+                categoryId: category.categoryId,
+                createdAt: {
+                    $gte: startOfMonth.getTime(),
+                    $lt: endOfMonth.getTime()
+                }
+            });
+
+            if (!existing) {
+                await this.expenseGoalModel.create({
+                    userId,
+                    categoryId: category.categoryId,
+                    expenseType:
+                        cat.categoryName === SPLITWISE_DEFAULTS.CATEGORIES.SETTLEMENT_RECEIVED.categoryName
+                            ? "Income"
+                            : "Expense",
+                    targetAmount: 0,
+                    description: cat.goalDescription,
+                    createdAt: now,
+                    updatedAt: now
+                });
+            }
+        }
+    }
+
     async getExpensesByGroup(splitGroupId: number, res: Response): Promise<Response> {
         try {
             splitGroupId = Number(splitGroupId);
@@ -92,28 +142,27 @@ export class SplitExpenseService {
             const groupName = splitGroup.name;
             const lastExpense = await this.splitExpenseModel.findOne().sort({ splitExpenseId: -1 }).exec();
             const newId = lastExpense ? lastExpense.splitExpenseId + 1 : Date.now();
-            const newExpense = new this.splitExpenseModel({
+            const newExpense = await this.splitExpenseModel.create({
                 ...expenseDto,
                 splitExpenseId: newId,
                 createdAt: now,
                 updatedAt: now
             });
-            await newExpense.save();
 
             const payer = await this.userModel.findOne({ id: paidBy }).exec();
             const payerName = payer?.name || `User ${paidBy}`;
-            const share = amount / splitBetween.length;
+            const perShare = amount / splitBetween.length;
             const description: string[] = [];
+            description.push(`${payerName} added "${title}" of ₹${amount.toFixed(2)}`);
 
             for (const uid of splitBetween) {
                 if (uid !== paidBy) {
-                    const user = await this.userModel.findOne({ id: uid }).exec();
-                    const userName = user?.name || "User";
-                    description.push(`${payerName} gets ₹${share.toFixed(2)} from ${userName}`);
+                    const u = await this.userModel.findOne({ id: uid }).exec();
+                    const name = u?.name || "User";
+                    description.push(`${payerName} gets ₹${perShare.toFixed(2)} from ${name}`);
                 }
             }
 
-            description.unshift(`${payerName} added "${title}" of ₹${amount.toFixed(2)}`);
             const lastAudit = await this.splitActivityModel.findOne().sort({ auditId: -1 }).exec();
             const newAuditId = lastAudit ? lastAudit.auditId + 1 : Date.now();
 
@@ -129,10 +178,17 @@ export class SplitExpenseService {
                 timestamp: now
             });
 
+            await this.ensureAllThreeGoals(paidBy, now);
+
+            for (const memberId of splitBetween) {
+                if (memberId === paidBy) continue;
+                await this.ensureAllThreeGoals(memberId, now);
+            }
+
             const splitCategory = await this.categoryModel.findOne({
                 categoryName: SPLITWISE_DEFAULTS.CATEGORIES.SPLIT_EXPENSE.categoryName,
                 userId: paidBy
-            }).exec();
+            });
 
             if (splitCategory) {
                 await this.expensesModel.create({
