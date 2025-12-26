@@ -9,6 +9,7 @@ import { ExpenseGoalModule } from './expense-goal/expense-goal.module';
 import { CategoryModule } from './category/category.module';
 import { SplitGroupsModule } from './splitwise/splitGroups/splitGroups.module';
 import { SplitExpenseModule } from './splitwise/splitExpenses/splitExpense.module';
+import { FinanceReportsModule } from './finance-reports/finance-reports.module';
 
 @Module({
   imports: [
@@ -22,9 +23,10 @@ import { SplitExpenseModule } from './splitwise/splitExpenses/splitExpense.modul
     ExpenseGoalModule,
     CategoryModule,
     SplitGroupsModule,
-    SplitExpenseModule
+    SplitExpenseModule,
+    FinanceReportsModule
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
